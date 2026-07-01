@@ -1,40 +1,38 @@
 # paper-rank-proxy
 
-FastAPI proxy for querying EasyScholar journal ranks with a local SQLite cache.
+`paper-rank-proxy` 是一个基于 FastAPI 的 EasyScholar 期刊等级查询代理服务，使用 SQLite 做本地缓存。
 
-中文文档: [README.zh-CN.md](README.zh-CN.md)
+English: [README.md](README.md)
 
-## What It Does
+## 功能
 
-- Queries the official EasyScholar open API by journal publication name.
-- Caches successful and negative results in SQLite.
-- Supports single lookup, batch lookup, and forced refresh.
-- Exposes a small Bearer-token protected HTTP API for local paper-search tools.
-- Preserves full `officialRank.all`, `officialRank.select`, and `customRank`
-  payloads while also returning common convenience fields.
+- 按期刊名称查询 EasyScholar 官方开放接口。
+- 将查询结果缓存到 SQLite。
+- 支持单期刊查询、批量查询、强制刷新。
+- 使用 Bearer token 保护查询接口。
+- 完整保留 `officialRank.all`、`officialRank.select`、`customRank`，并额外抽取常用字段。
 
-EasyScholar official API used by this project:
+本项目使用的 EasyScholar 官方接口：
 
 ```text
 GET https://www.easyscholar.cc/open/getPublicationRank
 ```
 
-The upstream request only sends:
+上游请求只传：
 
 ```text
 secretKey
 publicationName
 ```
 
-ISSN-only lookup is not supported by the EasyScholar official API and is
-therefore rejected by this proxy.
+EasyScholar 官方接口未说明支持 ISSN-only 查询，因此本代理会拒绝只有 ISSN 的请求。
 
-## Requirements
+## 环境要求
 
 - Python 3.11+
-- No standalone SQLite installation is required. Python includes SQLite support.
+- 不需要单独安装 SQLite 服务端。Python 自带 SQLite 支持。
 
-## Install
+## 安装
 
 ```bash
 python -m venv .venv
@@ -42,15 +40,15 @@ python -m venv .venv
 python -m pip install -e .
 ```
 
-Linux/macOS activation:
+Linux/macOS：
 
 ```bash
 source .venv/bin/activate
 ```
 
-## Configure
+## 配置
 
-Create `.env` from `.env.example`:
+复制 `.env.example` 为 `.env`：
 
 ```env
 EASYSCHOLAR_SECRET_KEY=
@@ -63,48 +61,46 @@ RANK_PROXY_DATABASE_URL=sqlite:///./data/rank_cache.sqlite3
 RANK_BATCH_MAX_SIZE=100
 ```
 
-Do not commit `.env`, local database files, or logs.
+不要提交 `.env`、本地数据库文件或日志。
 
-## Run
+## 启动
 
 ```bash
 uvicorn app.main:app --reload
 ```
 
-The SQLite tables are created automatically at startup.
+服务启动时会自动创建 SQLite 表。
 
-## Authentication
+## 鉴权
 
-All rank endpoints require:
+除 `/health` 外，查询接口都需要：
 
 ```http
 Authorization: Bearer <RANK_PROXY_TOKEN>
 ```
 
-`GET /health` does not require authentication.
+## 接口
 
-## API
-
-### Health
+### 健康检查
 
 ```http
 GET /health
 ```
 
-### Single Lookup
+### 单期刊查询
 
 ```http
 GET /rank?publication_name=Applied%20Energy
 Authorization: Bearer <RANK_PROXY_TOKEN>
 ```
 
-Optional query parameter:
+可选参数：
 
 ```text
 force_refresh=true
 ```
 
-### Batch Lookup
+### 批量查询
 
 ```http
 POST /rank/batch
@@ -126,7 +122,7 @@ Authorization: Bearer <RANK_PROXY_TOKEN>
 }
 ```
 
-### Refresh
+### 强制刷新
 
 ```http
 POST /rank/refresh
@@ -140,18 +136,15 @@ Authorization: Bearer <RANK_PROXY_TOKEN>
 }
 ```
 
-## Response Shape
+## 返回结构
 
 ```json
 {
   "publication_name": "Applied Energy",
   "normalized_name": "applied energy",
-  "issn": null,
   "source": "easyscholar",
   "status": "ok",
   "cache_hit": true,
-  "fetched_at": "2026-07-01T00:00:00Z",
-  "expires_at": "2026-12-28T00:00:00Z",
   "journal_rank": {
     "official_rank_all": {
       "sci": "Q1",
@@ -162,39 +155,32 @@ Authorization: Bearer <RANK_PROXY_TOKEN>
     "official_rank_select": {},
     "custom_rank": null,
     "sci": "Q1",
-    "ssci": null,
     "cas_zone": "工程技术1区",
     "cas_small": "工程：化工1区/能源与燃料2区。",
     "cas_top": "工程技术TOP",
     "impact_factor": 12.2,
     "five_year_if": 12.1,
-    "ei": "EI",
-    "cscd": null,
-    "pku_core": null,
-    "cssci": null,
-    "esi": "ENGINEERING",
-    "warning": null
-  },
-  "detail": null
+    "ei": "EI"
+  }
 }
 ```
 
-## Rank Field Mapping
+## 字段映射
 
-The full EasyScholar dictionaries are always returned in:
+完整 EasyScholar 字典会保留在：
 
 - `journal_rank.official_rank_all`
 - `journal_rank.official_rank_select`
 
-Common convenience fields are mapped as follows:
+常用字段映射：
 
-| Response field | EasyScholar key |
+| 返回字段 | EasyScholar 字段 |
 | --- | --- |
 | `sci` | `sci` |
 | `ssci` | `ssci` |
 | `impact_factor` | `sciif` |
 | `five_year_if` | `sciif5` |
-| `cas_zone` | `sciUp`, fallback `sciBase` |
+| `cas_zone` | `sciUp`，回退 `sciBase` |
 | `cas_small` | `sciUpSmall` |
 | `cas_top` | `sciUpTop` |
 | `ei` | `eii` |
@@ -204,22 +190,24 @@ Common convenience fields are mapped as follows:
 | `esi` | `esi` |
 | `warning` | `sciwarn` |
 
-## SQLite Tables
+## SQLite
 
-- `journal_rank_cache`: cached rank payloads and extracted convenience fields.
-- `rank_query_log`: request type, cache hit status, result status, and upstream diagnostics.
-
-Default database path:
+默认数据库：
 
 ```text
 ./data/rank_cache.sqlite3
 ```
 
-## Development Notes
+主要表：
 
-- Keep API responses backward-compatible when possible.
-- Update this README when configuration or endpoint behavior changes.
-- Do not log full EasyScholar request URLs because the upstream key is a query parameter.
+- `journal_rank_cache`：缓存期刊等级结果。
+- `rank_query_log`：记录查询类型、缓存命中、状态和上游诊断信息。
+
+## 开发说明
+
+- 尽量保持 API 返回结构向后兼容。
+- 配置项或接口行为变化时，同步更新 README。
+- 不要记录完整 EasyScholar 请求 URL，因为上游 key 位于 query 参数中。
 
 ## License
 

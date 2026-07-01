@@ -1,6 +1,6 @@
 from contextlib import asynccontextmanager
 
-from fastapi import Depends, FastAPI, HTTPException, Query, status
+from fastapi import Depends, FastAPI, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.auth import require_token
@@ -42,16 +42,15 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @app.get("/rank", response_model=RankResponse, dependencies=[Depends(require_token)])
     async def get_rank(
-        publication_name: str | None = Query(default=None, min_length=1),
+        publication_name: str = Query(
+            ...,
+            min_length=1,
+            description="Journal publication name. Required by the EasyScholar official API.",
+        ),
         issn: str | None = Query(default=None, min_length=1),
         force_refresh: bool = False,
         session: Session = Depends(get_session),
     ) -> RankResponse:
-        if not publication_name and not issn:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail="publication_name or issn is required.",
-            )
         return await service.get_rank(
             session=session,
             publication_name=publication_name,

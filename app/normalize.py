@@ -15,8 +15,8 @@ def normalize_issn(issn: str) -> str:
 
 
 def build_lookup_key(publication_name: str | None = None, issn: str | None = None) -> str:
-    if issn:
-        return f"issn:{normalize_issn(issn)}"
     if publication_name:
         return f"name:{normalize_publication_name(publication_name)}"
+    if issn:
+        return f"issn:{normalize_issn(issn)}"
     raise ValueError("publication_name or issn is required")

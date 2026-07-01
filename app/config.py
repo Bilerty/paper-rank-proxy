@@ -7,7 +7,10 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     easyscholar_secret_key: str = Field(default="", validation_alias="EASYSCHOLAR_SECRET_KEY")
-    easyscholar_api_url: str = Field(default="", validation_alias="EASYSCHOLAR_API_URL")
+    easyscholar_api_url: str = Field(
+        default="https://www.easyscholar.cc/open/getPublicationRank",
+        validation_alias="EASYSCHOLAR_API_URL",
+    )
     rank_proxy_token: str = Field(default="", validation_alias="RANK_PROXY_TOKEN")
     rank_cache_ttl_days: int = Field(default=180, validation_alias="RANK_CACHE_TTL_DAYS")
     rank_cache_negative_ttl_days: int = Field(

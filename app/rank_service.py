@@ -77,16 +77,26 @@ class RankService:
         record.raw_response_json = (
             json.dumps(result.raw_response, ensure_ascii=False) if result.raw_response else None
         )
+        record.official_rank_all_json = (
+            json.dumps(rank.official_rank_all, ensure_ascii=False) if rank else None
+        )
+        record.official_rank_select_json = (
+            json.dumps(rank.official_rank_select, ensure_ascii=False) if rank else None
+        )
+        record.custom_rank_json = (
+            json.dumps(rank.custom_rank, ensure_ascii=False) if rank and rank.custom_rank else None
+        )
         record.sci = rank.sci if rank else None
+        record.ssci = rank.ssci if rank else None
         record.cas_zone = rank.cas_zone if rank else None
         record.cas_small = rank.cas_small if rank else None
-        record.cas_top = _bool_to_int(rank.cas_top) if rank else None
+        record.cas_top = rank.cas_top if rank else None
         record.impact_factor = rank.impact_factor if rank else None
         record.five_year_if = rank.five_year_if if rank else None
-        record.ei = _bool_to_int(rank.ei) if rank else None
-        record.cscd = _bool_to_int(rank.cscd) if rank else None
-        record.pku_core = _bool_to_int(rank.pku_core) if rank else None
-        record.cssci = _bool_to_int(rank.cssci) if rank else None
+        record.ei = rank.ei if rank else None
+        record.cscd = rank.cscd if rank else None
+        record.pku_core = rank.pku_core if rank else None
+        record.cssci = rank.cssci if rank else None
         record.esi = rank.esi if rank else None
         record.warning = rank.warning if rank else result.detail
         record.fetched_at = _format_dt(now)
@@ -149,9 +159,3 @@ def _format_dt(value: datetime) -> str:
 
 def _parse_dt(value: str) -> datetime:
     return datetime.fromisoformat(value.replace("Z", "+00:00"))
-
-
-def _bool_to_int(value: bool | None) -> int | None:
-    if value is None:
-        return None
-    return int(value)

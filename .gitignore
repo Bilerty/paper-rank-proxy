@@ -12,3 +12,4 @@ build/
 data/*.sqlite3
 data/*.sqlite3-*
 logs/
+tests/

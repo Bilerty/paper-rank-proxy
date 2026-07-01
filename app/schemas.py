@@ -1,17 +1,11 @@
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field
 
 
 class RankRequestItem(BaseModel):
-    publication_name: str | None = Field(default=None, min_length=1)
+    publication_name: str = Field(min_length=1)
     issn: str | None = Field(default=None, min_length=1)
-
-    @model_validator(mode="after")
-    def require_lookup_value(self):
-        if not self.publication_name and not self.issn:
-            raise ValueError("publication_name or issn is required")
-        return self
 
 
 class BatchRankRequest(BaseModel):
@@ -24,16 +18,20 @@ class RefreshRankRequest(RankRequestItem):
 
 
 class JournalRank(BaseModel):
+    official_rank_all: dict[str, str] = Field(default_factory=dict)
+    official_rank_select: dict[str, str] = Field(default_factory=dict)
+    custom_rank: dict[str, Any] | None = None
     sci: str | None = None
+    ssci: str | None = None
     cas_zone: str | None = None
     cas_small: str | None = None
-    cas_top: bool | None = None
+    cas_top: str | None = None
     impact_factor: float | None = None
     five_year_if: float | None = None
-    ei: bool | None = None
-    cscd: bool | None = None
-    pku_core: bool | None = None
-    cssci: bool | None = None
+    ei: str | None = None
+    cscd: str | None = None
+    pku_core: str | None = None
+    cssci: str | None = None
     esi: str | None = None
     warning: str | None = None
 
